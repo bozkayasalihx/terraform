@@ -13,7 +13,7 @@ resource "aws_eks_cluster" "eks-cluster" {
 
   vpc_config {
     subnet_ids         = flatten([module.aws_vpc.public_subnets_id, module.aws_vpc.private_subnets_id])
-    security_group_ids = flatten(module.aws_vpc.security_groups.id)
+    security_group_ids = flatten(module.aws_vpc.security_groups_id)
   }
 
   depends_on = [
@@ -41,7 +41,7 @@ resource "aws_eks_node_group" "node_ec2" {
 
   depends_on = [
     aws_iam_role_policy_attachment.AmazonEKSWorkerNodePolicy,
-    aws-iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnly,
-    aws_iam_role_policy_attachment.AmazonEKS_CNI_Policy
+    aws_iam_role_policy_attachment.AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnly
   ]
 }
