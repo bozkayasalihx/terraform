@@ -1,0 +1,40 @@
+image:
+    name: hashicorp/terraform:light
+    entrypoint:
+        - "/usr/bin/env"
+        - "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        - "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
+        - "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
+        - "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
+
+stages:
+    - build
+    - deploy
+    - bastion-prep
+    - destory
+
+before_script:
+    - rm -rf .terraform
+    - terraform --version
+    - terraform init
+
+build:
+    stage: build
+    script:
+        - terraform validate
+        - terraform plan
+
+deploy:
+    stage: deploy
+    when: manual
+    script:
+        - terraform apply -auto-approve=true
+        - BASTION_IP=$(terraform output -json bastion_eip | awk -F'[(")]' '{print $2}') >> deploy.env
+        - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+        - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+        - chmod 600 ~/.ssh/id_rsa
+        - eval $(ssh-agent -s)
+        - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
+        
+        - sleep 200
+        - ssh -T -o 
